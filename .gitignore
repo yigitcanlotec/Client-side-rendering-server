@@ -1,6 +1,9 @@
 # Created by https://www.toptal.com/developers/gitignore/api/windows,linux,visualstudiocode,macos,node
 # Edit at https://www.toptal.com/developers/gitignore?templates=windows,linux,visualstudiocode,macos,node
 
+#Nodemon.json
+nodemon.json
+
 ### Linux ###
 *~
 

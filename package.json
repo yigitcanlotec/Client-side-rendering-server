@@ -1,20 +1,20 @@
 {
-  "name": "server",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js",
-    "dev-start": "node index.js",
-    "format": "npx prettier --write .",
-  },
-  "keywords": [],
-  "author": "Yigitcan Ustek <yigitcan.ustek@lotec.com.tr>",
-  "license": "ISC",
-  "dependencies": {
-    "eslint": "^8.51.0",
-    "express": "^4.18.2",
-    "nodemon": "^3.0.1"
-  }
+    "name": "server",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "nodemon index.js && npm run format",
+        "dev-start": "node index.js",
+        "format": "npx prettier --write ."
+    },
+    "keywords": [],
+    "author": "Yigitcan Ustek <yigitcan.ustek@lotec.com.tr>",
+    "license": "ISC",
+    "dependencies": {
+        "express": "^4.18.2",
+        "nodemon": "^3.0.1",
+        "pg": "^8.11.3"
+    }
 }
