@@ -1,6 +1,7 @@
 const express = require('express');
 const { Pool } = require('pg');
-const jwt = require('./jwt.js');
+const { jwt,base64UrlDecode, base64url, toUTF8 } = require('./jwt.js');
+const { createHmac } = require('node:crypto');
 
 const PORT = 3000;
 
@@ -36,15 +37,25 @@ const CORS = (req, res, next) => {
     //CORS Header
     const allowedOrigins = ['*'];
     const origin = req.headers.origin;
-    if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
-        res.setHeader('Access-Control-Allow-Origin', origin);
-    }
+    // if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+    //     res.setHeader('Access-Control-Allow-Origin', origin);
+    // }
+    res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'POST');
     res.header('Access-Control-Allow-Headers', 'Content-Type');
     res.header('Access-Control-Allow-Credentials', true);
     // res.header('Access-Control-Max-Age', 86400);
     next();
 };
+
+
+
+  
+
+
+
+
+// app.use(CORS);
 
 // CORS option for preflight request.
 app.options('/', CORS, (req, res, next) => {
@@ -53,13 +64,13 @@ app.options('/', CORS, (req, res, next) => {
 
 // CORS option for actual request.
 app.post('/', CORS, (req, res, next) => {
-    console.log(req.body);
+    // console.log(req.body);
     const queryString = 'SELECT * FROM users WHERE username = $1';
     pool.query(queryString, [req.body.username], (error, result) => {
         if (error) {
           res.sendStatus(418); // Instead of 503
         } else {
-            console.log('Query result:', result.rows);
+            // console.log('Query result:', result.rows);
            
               if (result.rowCount === 1 
                 && result.rows[0].username === req.body.username
@@ -71,8 +82,12 @@ app.post('/', CORS, (req, res, next) => {
                 // Add 15 minutes (15 minutes * 60 seconds * 1000 milliseconds)
                 const fifteenMinutesLater = new Date(currentDate.getTime() + 15 * 60 * 1000);
                 const token = jwt(req.body.username, fifteenMinutesLater);
-                console.log(token);
-                res.status(200).send(token);
+                // console.log(token);
+                // res.status(200).send(token);
+                // const URL = `/?client_identifier=${req.body.username}&redirect_uri=${'test'}`;
+
+               
+                res.redirect(302, `http://localhost:3000/?client_identifier=${base64url(req.body.username)}&redirect_uri=${base64url('redirect_uri')}&token=${token}`);
                
           }else{
             res.sendStatus(401);
@@ -82,6 +97,34 @@ app.post('/', CORS, (req, res, next) => {
   
 });
 
+app.get('/', CORS, (req,res) => {
+    // console.log(req.query);
+    const parsedToken = req.query.token.split('.');
+    const tokenDate = new Date(JSON.parse(base64UrlDecode(parsedToken[1])).exp);
+    const dateNow = new Date();
+    
+    if (tokenDate < dateNow) {
+        res.sendStatus(401);
+      } else {
+
+        const hmac = createHmac('sha256', 'a secret');
+        const signatureSets = base64UrlDecode(parsedToken[0]) + JSON.stringify('.') + base64UrlDecode(parsedToken[1]);
+        const verifySignature = hmac.update(signatureSets).digest('base64url');
+        hmac.end();
+
+        if (parsedToken[2] === verifySignature){
+            console.log('test ok');
+            // res.redirect(`/${base64url(req.body.username)}`)
+            res.redirect('http://localhost:5500');
+        }
+      }
+    // res.sendStatus(200);
+});
+
+
+
+
+//----------------------------------------
 app.get('/home', async (req, res) => {
     const databaseQueryString = 'SELECT * FROM tasks;';
     pool.on('error', (err, client) => {
@@ -91,7 +134,8 @@ app.get('/home', async (req, res) => {
 
     const client = await pool.connect();
     const queryResponse = await client.query(databaseQueryString);
-    console.log(queryResponse.rows[0]);
+
+    // console.log(queryResponse.rows[0]);
 
     client.release();
 
